@@ -115,13 +115,12 @@ Remember: you are talking to people who may be insecure, in transition, or witho
 
 # ── Gemini ─────────────────────────────────────────────────────────
 def get_api_key() -> str:
-    """Retorna a API key — do servidor (secrets) ou da sessão do usuário."""
-    # tenta pegar dos secrets do Streamlit Cloud primeiro
     try:
-        return st.secrets["GEMINI_API_KEY"]
+        key = st.secrets["GEMINI_API_KEY"]
+        if key:
+            return key
     except Exception:
         pass
-    # fallback para a sessão do usuário
     return st.session_state.get("api_key", "")
     genai.configure(api_key=api_key)
     system = SYSTEM_PROMPT_PT if lang == "PT" else SYSTEM_PROMPT_EN
