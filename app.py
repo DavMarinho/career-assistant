@@ -1,16 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
-import re
 
-# ── Página ─────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Carla – Mentora de Carreira",
+    page_title="Mentora de Carreira AI",
     page_icon="🎯",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
-# ── Textos ─────────────────────────────────────────────────────────
 TEXTS = {
     "pt": {
         "title": "🎯 Mentora de Carreira AI",
@@ -24,8 +21,7 @@ TEXTS = {
         "thinking": "Pensando...",
         "welcome": "Olá! Sou sua mentora de carreira com IA 👋\n\nEstou aqui para te ajudar com:\n- 📄 Currículo e LinkedIn\n- 🎯 Escolha de carreira\n- 💼 Preparação para entrevistas\n- 📈 Crescimento profissional\n- 🔄 Transição de área\n- 💰 Negociação de salário\n\nComo posso te ajudar hoje?",
         "error_api": "⚠️ Chave de API inválida ou sem créditos.",
-        "error_generic": "⚠️ Erro ao conectar. Verifique sua chave e tente novamente.",
-        "api_saved": "✓ API Key salva",
+        "error_generic": "⚠️ Erro ao conectar. Tente novamente.",
         "footer": "Mentora de Carreira AI · Desenvolvido por Davi Marinho",
     },
     "en": {
@@ -40,97 +36,90 @@ TEXTS = {
         "thinking": "Thinking...",
         "welcome": "Hi! I'm your AI career mentor 👋\n\nI'm here to help you with:\n- 📄 Resume and LinkedIn\n- 🎯 Career choice\n- 💼 Interview preparation\n- 📈 Professional growth\n- 🔄 Career transition\n- 💰 Salary negotiation\n\nHow can I help you today?",
         "error_api": "⚠️ Invalid API key or no credits.",
-        "error_generic": "⚠️ Connection error. Check your key and try again.",
-        "api_saved": "✓ API Key saved",
+        "error_generic": "⚠️ Connection error. Please try again.",
         "footer": "AI Career Mentor · Developed by Davi Marinho",
     },
 }
 
-# ── Persona da Carla ───────────────────────────────────────────────
-SYSTEM_PROMPT_PT = """Você é uma mentora de carreira experiente, empática e direta chamada Carla.
+SYSTEM_PROMPT_PT = """Você é uma mentora de carreira experiente, empática e direta.
 
-Seu objetivo é ajudar pessoas de qualquer área e nível de experiência a conquistarem seus objetivos profissionais.
+Ajude pessoas de qualquer área e nível de experiência a conquistarem seus objetivos profissionais.
 
-FOCO PRINCIPAL — você responde com profundidade sobre:
-- Orientação de carreira para qualquer área profissional
-- Currículo, carta de apresentação e perfil no LinkedIn
-- Preparação para entrevistas de emprego
+FOCO PRINCIPAL:
+- Orientação de carreira para qualquer área
+- Currículo, LinkedIn e carta de apresentação
+- Preparação para entrevistas
 - Transição de carreira e recolocação
-- Desenvolvimento profissional e habilidades
 - Negociação de salário e benefícios
 - Mercado de trabalho, tendências e melhores empresas por área
 - Primeiro emprego, estágios e trainee
-- Empreendedorismo e trabalho freelance
-- Soft skills e hard skills
-- Networking e construção de marca pessoal
+- Empreendedorismo e freelance
+- Soft skills, hard skills e networking
 
 PERGUNTAS FORA DO ASSUNTO:
-Se alguém perguntar algo que não tem relação com carreira ou trabalho (ex: previsão do tempo, receitas, esportes, política), responda de forma simpática e breve, e redirecione para o foco:
-Exemplo: "Essa não é bem minha área de especialidade 😄 Mas se quiser, posso te ajudar com sua carreira! Tem alguma dúvida profissional que posso resolver?"
+Responda brevemente e redirecione: "Essa não é bem minha área 😄 Mas posso te ajudar com sua carreira! Tem alguma dúvida profissional?"
 
-Seu estilo:
-- Seja empática, encorajadora e direta
-- Use linguagem simples e acessível
-- Dê dicas práticas e aplicáveis imediatamente
-- Faça perguntas para entender melhor a situação da pessoa
-- Celebre as conquistas do usuário
-- Seja honesta quando algo for difícil, mas sempre motivadora
-- Use exemplos reais quando possível
-- Responda SEMPRE em português brasileiro
+ESTILO:
+- Empática, encorajadora e direta
+- Linguagem simples e acessível
+- Dicas práticas e aplicáveis
+- Faça perguntas para entender melhor a situação
+- Responda SEMPRE em português brasileiro"""
 
-Lembre-se: você está falando com pessoas que podem estar inseguras, em transição ou sem experiência. Seja acolhedora e confiante."""
+SYSTEM_PROMPT_EN = """You are an experienced, empathetic and direct career mentor.
 
-SYSTEM_PROMPT_EN = """You are an experienced, empathetic and direct career mentor named Carla.
+Help people from any field and experience level achieve their professional goals.
 
-Your goal is to help people from any field and experience level achieve their professional goals.
-
-MAIN FOCUS — you answer in depth about:
-- Career guidance for any professional field
-- Resume, cover letter and LinkedIn profile
-- Job interview preparation
+MAIN FOCUS:
+- Career guidance for any field
+- Resume, LinkedIn and cover letter
+- Interview preparation
 - Career transitions and job replacement
-- Professional development and skills
 - Salary and benefits negotiation
 - Job market, trends and best companies by field
 - First jobs, internships and trainee programs
 - Entrepreneurship and freelancing
-- Soft skills and hard skills
-- Networking and personal branding
+- Soft skills, hard skills and networking
 
 OFF-TOPIC QUESTIONS:
-If someone asks something unrelated to career or work (e.g. weather forecast, recipes, sports, politics), respond briefly and kindly, then redirect:
-Example: "That's not quite my area of expertise 😄 But I'd love to help with your career! Do you have any professional questions I can help with?"
+Respond briefly and redirect: "That's not quite my area 😄 But I can help with your career! Any professional questions?"
 
-Your style:
-- Be empathetic, encouraging and direct
-- Use simple, accessible language
-- Give practical, immediately applicable tips
-- Ask questions to better understand the person's situation
-- Celebrate user achievements
-- Be honest when something is difficult, but always motivating
-- Use real examples when possible
-- ALWAYS respond in English
+STYLE:
+- Empathetic, encouraging and direct
+- Simple, accessible language
+- Practical, immediately applicable tips
+- Ask questions to understand the situation better
+- ALWAYS respond in English"""
 
-Remember: you are talking to people who may be insecure, in transition, or without experience. Be welcoming and confident."""
 
-# ── Gemini ─────────────────────────────────────────────────────────
 def get_api_key() -> str:
+    # 1. tenta pegar do Streamlit Secrets (produção)
     try:
         key = st.secrets["GEMINI_API_KEY"]
         if key:
             return key
     except Exception:
         pass
+    # 2. fallback: sessão do usuário (desenvolvimento local)
     return st.session_state.get("api_key", "")
+
+
+def has_server_key() -> bool:
+    try:
+        return bool(st.secrets["GEMINI_API_KEY"])
+    except Exception:
+        return False
+
+
+def get_gemini_response(api_key: str, history: list, lang: str) -> str:
     genai.configure(api_key=api_key)
     system = SYSTEM_PROMPT_PT if lang == "PT" else SYSTEM_PROMPT_EN
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash",
         system_instruction=system,
     )
-    # converte histórico para formato Gemini
     gemini_history = []
-    for msg in history[:-1]:  # tudo exceto a última mensagem
+    for msg in history[:-1]:
         gemini_history.append({
             "role": "user" if msg["role"] == "user" else "model",
             "parts": [msg["content"]],
@@ -139,39 +128,35 @@ def get_api_key() -> str:
     response = chat.send_message(history[-1]["content"])
     return response.text.strip()
 
-# ── CSS customizado ────────────────────────────────────────────────
+
 st.markdown("""
 <style>
-/* Avatar da Carla */
-.carla-avatar {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; flex-shrink: 0;
+.mentor-avatar {
+    width:40px;height:40px;border-radius:50%;
+    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;flex-shrink:0;
 }
-/* Bolha de mensagem */
-.msg-carla {
-    background: var(--secondary-background-color);
-    border-radius: 0 16px 16px 16px;
-    padding: 12px 16px; margin: 4px 0;
-    max-width: 85%; font-size: 15px; line-height: 1.6;
+.msg-mentor {
+    background:var(--secondary-background-color);
+    border-radius:0 16px 16px 16px;
+    padding:12px 16px;margin:4px 0;
+    max-width:85%;font-size:15px;line-height:1.6;
 }
 .msg-user {
-    background: #667eea;
-    color: white;
-    border-radius: 16px 0 16px 16px;
-    padding: 12px 16px; margin: 4px 0;
-    max-width: 85%; font-size: 15px; line-height: 1.6;
-    margin-left: auto;
+    background:#667eea;color:white;
+    border-radius:16px 0 16px 16px;
+    padding:12px 16px;margin:4px 0;
+    max-width:85%;font-size:15px;line-height:1.6;
+    margin-left:auto;
 }
-.msg-row { display: flex; gap: 10px; margin: 8px 0; align-items: flex-start; }
-.msg-row-user { display: flex; justify-content: flex-end; margin: 8px 0; }
+.msg-row{display:flex;gap:10px;margin:8px 0;align-items:flex-start;}
+.msg-row-user{display:flex;justify-content:flex-end;margin:8px 0;}
 </style>
 """, unsafe_allow_html=True)
 
-# ── UI principal ───────────────────────────────────────────────────
+
 def main():
-    # idioma
     col_lang = st.columns([6, 1])
     with col_lang[1]:
         lang = st.selectbox("🌐", ["PT", "EN"], label_visibility="collapsed")
@@ -181,16 +166,8 @@ def main():
     st.markdown(f"## {t['title']}")
     st.markdown(f"<p style='color:#888;margin-top:-12px;margin-bottom:20px'>{t['subtitle']}</p>", unsafe_allow_html=True)
 
-    # ── API Key ────────────────────────────────────────────────────
-    # verifica se tem chave no servidor
-    server_key = False
-    try:
-        if st.secrets.get("GEMINI_API_KEY"):
-            server_key = True
-    except Exception:
-        pass
-
-    if not server_key:
+    # só mostra campo de API key se não tiver chave no servidor
+    if not has_server_key():
         saved_key = st.session_state.get("api_key", "")
         with st.expander("🔑 API Key", expanded=not saved_key):
             api_key_input = st.text_input(
@@ -202,28 +179,26 @@ def main():
             )
             if api_key_input:
                 st.session_state["api_key"] = api_key_input
-                st.caption(t["api_saved"])
 
-    # ── Inicializa histórico ───────────────────────────────────────
+    # inicializa histórico
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
         st.session_state["lang"] = lang
 
-    # reset se mudou idioma
     if st.session_state.get("lang") != lang:
         st.session_state["messages"] = []
         st.session_state["lang"] = lang
 
-    # ── Mensagem de boas-vindas ────────────────────────────────────
+    # boas-vindas
     if not st.session_state["messages"]:
         st.markdown(f"""
         <div class="msg-row">
-            <div class="carla-avatar">🎯</div>
-            <div class="msg-carla">{t['welcome'].replace(chr(10), '<br>')}</div>
+            <div class="mentor-avatar">🎯</div>
+            <div class="msg-mentor">{t['welcome'].replace(chr(10), '<br>')}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    # ── Histórico de mensagens ─────────────────────────────────────
+    # histórico
     for msg in st.session_state["messages"]:
         if msg["role"] == "user":
             st.markdown(f"""
@@ -235,12 +210,12 @@ def main():
             content = msg['content'].replace('\n', '<br>')
             st.markdown(f"""
             <div class="msg-row">
-                <div class="carla-avatar">🎯</div>
-                <div class="msg-carla">{content}</div>
+                <div class="mentor-avatar">🎯</div>
+                <div class="msg-mentor">{content}</div>
             </div>
             """, unsafe_allow_html=True)
 
-    # ── Input ──────────────────────────────────────────────────────
+    # input
     st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
     col_input, col_btn = st.columns([5, 1])
     with col_input:
@@ -259,7 +234,7 @@ def main():
             st.session_state["messages"] = []
             st.rerun()
 
-    # ── Envio ──────────────────────────────────────────────────────
+    # envio
     if (send or user_input) and user_input.strip():
         api_key = get_api_key()
         if not api_key:
@@ -292,12 +267,12 @@ def main():
 
         st.rerun()
 
-    # ── Footer ─────────────────────────────────────────────────────
     st.markdown("---")
     st.markdown(
         f"<p style='text-align:center;color:#aaa;font-size:12px'>{t['footer']}</p>",
         unsafe_allow_html=True,
     )
+
 
 if __name__ == "__main__":
     main()
