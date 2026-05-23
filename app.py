@@ -19,7 +19,7 @@ TEXTS = {
         "send": "Enviar",
         "clear": "🗑️ Limpar conversa",
         "thinking": "Pensando...",
-        "welcome": "Olá! Sou sua mentora de carreira com IA 👋\n\nAntes de começar, como posso te chamar?",
+        "welcome": "Olá! Sou sua mentora de carreira com IA 👋\nDesenvolvida por **Davi Marinho** para te ajudar a conquistar seus objetivos profissionais.\n\nAntes de começar, como posso te chamar?",
         "error_api": "⚠️ Chave de API inválida ou sem créditos.",
         "error_generic": "⚠️ Erro ao conectar. Tente novamente.",
         "footer": "Mentora de Carreira AI · Desenvolvido por Davi Marinho",
@@ -34,7 +34,7 @@ TEXTS = {
         "send": "Send",
         "clear": "🗑️ Clear conversation",
         "thinking": "Thinking...",
-        "welcome": "Hi! I'm your AI career mentor 👋\n\nBefore we start, what's your name?",
+        "welcome": "Hi! I'm your AI career mentor 👋\nDeveloped by **Davi Marinho** to help you achieve your professional goals.\n\nBefore we start, what's your name?",
         "error_api": "⚠️ Invalid API key or no credits.",
         "error_generic": "⚠️ Connection error. Please try again.",
         "footer": "AI Career Mentor · Developed by Davi Marinho",
@@ -156,6 +156,30 @@ st.markdown("""
 }
 .msg-row{display:flex;gap:10px;margin:8px 0;align-items:flex-start;}
 .msg-row-user{display:flex;justify-content:flex-end;margin:8px 0;}
+
+/* Input fixo no rodapé */
+.stChatInput {
+    position:fixed !important;
+    bottom:60px !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:min(700px, 90vw) !important;
+    z-index:999 !important;
+}
+section[data-testid="stBottom"] {
+    position:fixed !important;
+    bottom:0 !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    width:min(700px, 90vw) !important;
+    z-index:999 !important;
+    background:var(--background-color) !important;
+    padding:12px 0 16px !important;
+}
+/* Espaço no final para não sobrepor mensagens */
+.main .block-container {
+    padding-bottom:140px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
