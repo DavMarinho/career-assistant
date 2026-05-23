@@ -19,7 +19,7 @@ TEXTS = {
         "send": "Enviar",
         "clear": "🗑️ Limpar conversa",
         "thinking": "Pensando...",
-        "welcome": "Olá! Sou sua mentora de carreira com IA 👋\nDesenvolvida por **Davi Marinho** para te ajudar a conquistar seus objetivos profissionais.\n\nAntes de começar, como posso te chamar?",
+        "welcome": "Olá! Sou sua mentora de carreira com IA 👋\nDesenvolvida por Davi Marinho para te ajudar a conquistar seus objetivos profissionais.\n\nAntes de começar, como posso te chamar?",
         "error_api": "⚠️ Chave de API inválida ou sem créditos.",
         "error_generic": "⚠️ Erro ao conectar. Tente novamente.",
         "footer": "Mentora de Carreira AI · Desenvolvido por Davi Marinho",
