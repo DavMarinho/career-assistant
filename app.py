@@ -19,7 +19,7 @@ TEXTS = {
         "send": "Enviar",
         "clear": "🗑️ Limpar conversa",
         "thinking": "Pensando...",
-        "welcome": "Olá! Sou sua mentora de carreira com IA 👋\n\nEstou aqui para te ajudar com:\n- 📄 Currículo e LinkedIn\n- 🎯 Escolha de carreira\n- 💼 Preparação para entrevistas\n- 📈 Crescimento profissional\n- 🔄 Transição de área\n- 💰 Negociação de salário\n\nComo posso te ajudar hoje?",
+        "welcome": "Olá! Sou sua mentora de carreira com IA 👋\n\nAntes de começar, como posso te chamar?",
         "error_api": "⚠️ Chave de API inválida ou sem créditos.",
         "error_generic": "⚠️ Erro ao conectar. Tente novamente.",
         "footer": "Mentora de Carreira AI · Desenvolvido por Davi Marinho",
@@ -34,7 +34,7 @@ TEXTS = {
         "send": "Send",
         "clear": "🗑️ Clear conversation",
         "thinking": "Thinking...",
-        "welcome": "Hi! I'm your AI career mentor 👋\n\nI'm here to help you with:\n- 📄 Resume and LinkedIn\n- 🎯 Career choice\n- 💼 Interview preparation\n- 📈 Professional growth\n- 🔄 Career transition\n- 💰 Salary negotiation\n\nHow can I help you today?",
+        "welcome": "Hi! I'm your AI career mentor 👋\n\nBefore we start, what's your name?",
         "error_api": "⚠️ Invalid API key or no credits.",
         "error_generic": "⚠️ Connection error. Please try again.",
         "footer": "AI Career Mentor · Developed by Davi Marinho",
@@ -42,6 +42,8 @@ TEXTS = {
 }
 
 SYSTEM_PROMPT_PT = """Você é uma mentora de carreira experiente, empática e direta.
+
+PRIMEIRA MENSAGEM: Sempre peça o nome do usuário na primeira interação. Após receber o nome, use-o naturalmente durante a conversa para criar conexão.
 
 Ajude pessoas de qualquer área e nível de experiência a conquistarem seus objetivos profissionais.
 
@@ -67,6 +69,8 @@ ESTILO:
 - Responda SEMPRE em português brasileiro"""
 
 SYSTEM_PROMPT_EN = """You are an experienced, empathetic and direct career mentor.
+
+FIRST MESSAGE: Always ask for the user's name in the first interaction. After receiving the name, use it naturally during the conversation to create connection.
 
 Help people from any field and experience level achieve their professional goals.
 
@@ -219,23 +223,19 @@ def main():
     st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
     col_input, col_btn = st.columns([5, 1])
     with col_input:
-        user_input = st.text_input(
-            "msg",
-            placeholder=t["placeholder"],
-            label_visibility="collapsed",
-            key="user_input",
-        )
+        user_input = st.chat_input(t["placeholder"])
     with col_btn:
-        send = st.button(t["send"], use_container_width=True, type="primary")
+        pass
 
     col_clear, _ = st.columns([2, 5])
     with col_clear:
         if st.button(t["clear"], use_container_width=True):
             st.session_state["messages"] = []
+            st.session_state.pop("user_name", None)
             st.rerun()
 
     # envio
-    if (send or user_input) and user_input.strip():
+    if user_input and user_input.strip():
         api_key = get_api_key()
         if not api_key:
             st.error(t["error_api"])
@@ -245,6 +245,13 @@ def main():
             "role": "user",
             "content": user_input.strip(),
         })
+
+        # renderiza mensagem do usuário imediatamente
+        st.markdown(f"""
+        <div class="msg-row-user">
+            <div class="msg-user">{user_input.strip()}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         with st.spinner(t["thinking"]):
             try:
@@ -257,6 +264,14 @@ def main():
                     "role": "assistant",
                     "content": response,
                 })
+                # renderiza resposta imediatamente
+                content = response.replace('\n', '<br>')
+                st.markdown(f"""
+                <div class="msg-row">
+                    <div class="mentor-avatar">🎯</div>
+                    <div class="msg-mentor">{content}</div>
+                </div>
+                """, unsafe_allow_html=True)
             except Exception as e:
                 err = str(e).lower()
                 if "api_key" in err or "invalid" in err or "401" in err:
@@ -264,8 +279,6 @@ def main():
                 else:
                     st.error(t["error_generic"])
                 st.stop()
-
-        st.rerun()
 
     st.markdown("---")
     st.markdown(
